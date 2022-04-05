@@ -2,6 +2,7 @@
 
 #include "UnrealSTLFunctionLibrary.h"
 #include "Misc/FileHelper.h"
+#include "StaticMeshResources.h"
 
 namespace UnrealSTL
 {
@@ -19,7 +20,7 @@ namespace UnrealSTL
 			{
 				const int32 NumBytes = NumElements * sizeof(ReturnType);
 				FRHIGPUBufferReadback BufferReadback(TEXT("STL Buffer Readback"));
-				BufferReadback.EnqueueCopy(RHICmdList, Resource, NumBytes);
+				BufferReadback.EnqueueCopy(RHICmdList, Resource.GetReference(), NumBytes);
 				RHICmdList.BlockUntilGPUIdle();
 				if (BufferReadback.IsReady())
 				{
@@ -299,7 +300,12 @@ UStaticMesh* UUnrealSTLFunctionLibrary::LoadStaticMeshFromSTLFileLODs(const TArr
 		FStaticMeshSourceModel& SourceModel = StaticMesh->AddSourceModel();
 		SourceModel.ScreenSize = RenderData->ScreenSize[LODIndex];
 #endif
+
+#if ENGINE_MAJOR_VERSION < 5
+		FStaticMeshLODResources::FStaticMeshSectionArray& Sections = LODResources.Sections;
+#else
 		FStaticMeshSectionArray& Sections = LODResources.Sections;
+#endif
 
 		TArray<FUnrealSTLMesh> STLMeshes;
 		for (const FUnrealSTLFile& File : FileLOD.Sections)
@@ -411,7 +417,11 @@ bool UUnrealSTLFunctionLibrary::SaveStaticMeshToSTLData(UStaticMesh* StaticMesh,
 	TArray<uint32> Indices;
 	TArray<FVector3f> Vertices;
 
+#if ENGINE_MAJOR_VERSION < 5
+	if (StaticMesh->bAllowCPUAccess)
+#else
 	if (LODResources.IndexBuffer.GetAllowCPUAccess())
+#endif
 	{
 		LODResources.IndexBuffer.GetCopy(Indices);
 	}
@@ -432,7 +442,11 @@ bool UUnrealSTLFunctionLibrary::SaveStaticMeshToSTLData(UStaticMesh* StaticMesh,
 		}
 	}
 
+#if ENGINE_MAJOR_VERSION < 5
+	if (StaticMesh->bAllowCPUAccess)
+#else
 	if (LODResources.VertexBuffers.PositionVertexBuffer.GetAllowCPUAccess())
+#endif
 	{
 		for (uint32 VertexIndex = 0; VertexIndex < LODResources.VertexBuffers.PositionVertexBuffer.GetNumVertices(); VertexIndex++)
 		{
@@ -468,7 +482,7 @@ bool UUnrealSTLFunctionLibrary::SaveStaticMeshToSTLData(UStaticMesh* StaticMesh,
 		FVector3f Vertex1 = Config.Transform.TransformPosition(Vertices[VertexIndex1]) * NegateX;
 		FVector3f Vertex2 = Config.Transform.TransformPosition(Vertices[VertexIndex2]) * NegateX;
 		FVector3f Vertex3 = Config.Transform.TransformPosition(Vertices[VertexIndex3]) * NegateX;
-		FVector3f Normal = (Vertex3 - Vertex1).Cross(Vertex2 - Vertex1).GetSafeNormal();
+		FVector3f Normal = FVector3f::CrossProduct(Vertex3 - Vertex1, Vertex2 - Vertex1).GetSafeNormal();
 		uint16 Attributes = 0;
 
 		Writer << Normal;

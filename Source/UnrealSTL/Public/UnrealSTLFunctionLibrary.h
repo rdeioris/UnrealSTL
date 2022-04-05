@@ -8,6 +8,10 @@
 #include "Serialization/ArrayWriter.h"
 #include "UnrealSTLFunctionLibrary.generated.h"
 
+#if ENGINE_MAJOR_VERSION < 5
+#define FVector3f FVector
+#endif
+
 struct UNREALSTL_API FUnrealSTLMesh
 {
 	TArray<FStaticMeshBuildVertex> Vertices;

@@ -51,17 +51,17 @@ UObject* UUnrealSTLFactory::FactoryCreateBinary(UClass* InClass, UObject* InPare
 
 		const FVertexID VertexID1 = MeshDescription->CreateVertex();
 		Positions[VertexID1] = Vertex1;
-		FVertexInstanceID VertexInstanceID1 = MeshDescription->CreateVertexInstance(VertexIndex);
+		FVertexInstanceID VertexInstanceID1 = MeshDescription->CreateVertexInstance(FVertexID(VertexIndex));
 		Normals[VertexInstanceID1] = Normal1;
 
 		const FVertexID VertexID2 = MeshDescription->CreateVertex();
 		Positions[VertexID2] = Vertex2;
-		FVertexInstanceID VertexInstanceID2 = MeshDescription->CreateVertexInstance(VertexIndex + 1);
+		FVertexInstanceID VertexInstanceID2 = MeshDescription->CreateVertexInstance(FVertexID(VertexIndex + 1));
 		Normals[VertexInstanceID2] = Normal2;
 
 		const FVertexID VertexID3 = MeshDescription->CreateVertex();
 		Positions[VertexID3] = Vertex3;
-		FVertexInstanceID VertexInstanceID3 = MeshDescription->CreateVertexInstance(VertexIndex + 2);
+		FVertexInstanceID VertexInstanceID3 = MeshDescription->CreateVertexInstance(FVertexID(VertexIndex + 2));
 		Normals[VertexInstanceID3] = Normal3;
 
 		TArray<FEdgeID> Edges;
