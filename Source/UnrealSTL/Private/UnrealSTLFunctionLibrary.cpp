@@ -20,7 +20,7 @@ namespace UnrealSTL
 			{
 				const int32 NumBytes = NumElements * sizeof(ReturnType);
 				FRHIGPUBufferReadback BufferReadback(TEXT("STL Buffer Readback"));
-				BufferReadback.EnqueueCopy(RHICmdList, Resource.GetReference(), NumBytes);
+				BufferReadback.EnqueueCopy(RHICmdList, Resource, NumBytes);
 				RHICmdList.BlockUntilGPUIdle();
 				if (BufferReadback.IsReady())
 				{
@@ -427,6 +427,10 @@ bool UUnrealSTLFunctionLibrary::SaveStaticMeshToSTLData(UStaticMesh* StaticMesh,
 	}
 	else
 	{
+#if ENGINE_MAJOR_VERSION < 5
+		// currently indexbuffer copy is not supported
+		return false;
+#else
 		if (LODResources.IndexBuffer.Is32Bit())
 		{
 			UnrealSTL::GPUToCPU(Indices, LODResources.IndexBuffer.IndexBufferRHI, LODResources.IndexBuffer.GetNumIndices());
@@ -440,6 +444,7 @@ bool UUnrealSTLFunctionLibrary::SaveStaticMeshToSTLData(UStaticMesh* StaticMesh,
 				Indices.Add(Index);
 			}
 		}
+#endif
 	}
 
 #if ENGINE_MAJOR_VERSION < 5
