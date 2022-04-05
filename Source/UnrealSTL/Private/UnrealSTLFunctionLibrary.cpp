@@ -65,7 +65,7 @@ FUnrealSTLMesh::FUnrealSTLMesh(const TArray<FUnrealSTLMesh>& Meshes) : FUnrealST
 		Sections.Add(Section);
 		for (const FStaticMeshBuildVertex& BuildVertex : Mesh.Vertices)
 		{
-			Bounds.SphereRadius = FMath::Max((BuildVertex.Position - Bounds.Origin).Size(), Bounds.SphereRadius);
+			Bounds.SphereRadius = FMath::Max((BuildVertex.Position - FVector3f(Bounds.Origin)).Size(), Bounds.SphereRadius);
 		}
 
 		for (const uint32 VertexIndex : Mesh.LODIndices)
@@ -129,7 +129,7 @@ bool UUnrealSTLFunctionLibrary::LoadMeshFromSTLData(FArrayReader& Reader, const 
 					float NormalX = FCString::Atof(*Tokens[TokenIndex++]);
 					float NormalY = FCString::Atof(*Tokens[TokenIndex++]);
 					float NormalZ = FCString::Atof(*Tokens[TokenIndex++]);
-					Vertex[0].TangentZ = Config.Transform.TransformVector(FVector3f(-NormalX, NormalY, NormalZ));
+					Vertex[0].TangentZ = FVector3f(Config.Transform.TransformVector(FVector(-NormalX, NormalY, NormalZ)));
 					Vertex[1].TangentZ = Vertex[0].TangentZ;
 					Vertex[2].TangentZ = Vertex[0].TangentZ;
 				}
@@ -145,13 +145,13 @@ bool UUnrealSTLFunctionLibrary::LoadMeshFromSTLData(FArrayReader& Reader, const 
 					float VertexX = FCString::Atof(*Tokens[TokenIndex++]);
 					float VertexY = FCString::Atof(*Tokens[TokenIndex++]);
 					float VertexZ = FCString::Atof(*Tokens[TokenIndex++]);
-					Vertex[VertexState++].Position = Config.Transform.TransformPosition(FVector3f(-VertexX, VertexY, VertexZ));
+					Vertex[VertexState++].Position = FVector3f(Config.Transform.TransformPosition(FVector(-VertexX, VertexY, VertexZ)));
 					if (VertexState > 2)
 					{
 						VertexState = 0;
-						BoundingBox += Vertex[0].Position;
-						BoundingBox += Vertex[1].Position;
-						BoundingBox += Vertex[2].Position;
+						BoundingBox += FVector(Vertex[0].Position);
+						BoundingBox += FVector(Vertex[1].Position);
+						BoundingBox += FVector(Vertex[2].Position);
 
 						STLMesh.Vertices.Append(Vertex, 3);
 
@@ -188,13 +188,13 @@ bool UUnrealSTLFunctionLibrary::LoadMeshFromSTLData(FArrayReader& Reader, const 
 
 				for (int32 VertexIndex = 0; VertexIndex < 3; VertexIndex++)
 				{
-					Vertex[VertexIndex].Position = Config.Transform.TransformPosition(FVector3f(-Vertex[VertexIndex].Position.X, Vertex[VertexIndex].Position.Y, Vertex[VertexIndex].Position.Z));
-					Vertex[VertexIndex].TangentZ = Config.Transform.TransformVector(FVector3f(Vertex[VertexIndex].TangentZ.X, Vertex[VertexIndex].TangentZ.Y, Vertex[VertexIndex].TangentZ.Z));
+					Vertex[VertexIndex].Position = FVector3f(Config.Transform.TransformPosition(FVector(-Vertex[VertexIndex].Position.X, Vertex[VertexIndex].Position.Y, Vertex[VertexIndex].Position.Z)));
+					Vertex[VertexIndex].TangentZ = FVector3f(Config.Transform.TransformVector(FVector(Vertex[VertexIndex].TangentZ.X, Vertex[VertexIndex].TangentZ.Y, Vertex[VertexIndex].TangentZ.Z)));
 				}
 
-				BoundingBox += Vertex[0].Position;
-				BoundingBox += Vertex[1].Position;
-				BoundingBox += Vertex[2].Position;
+				BoundingBox += FVector(Vertex[0].Position);
+				BoundingBox += FVector(Vertex[1].Position);
+				BoundingBox += FVector(Vertex[2].Position);
 
 				STLMesh.Vertices.Append(Vertex, 3);
 
@@ -228,7 +228,7 @@ bool UUnrealSTLFunctionLibrary::LoadMeshFromSTLData(FArrayReader& Reader, const 
 	int32 Index = 0;
 	for (const FStaticMeshBuildVertex& BuildVertex : STLMesh.Vertices)
 	{
-		STLMesh.Bounds.SphereRadius = FMath::Max((BuildVertex.Position - STLMesh.Bounds.Origin).Size(), STLMesh.Bounds.SphereRadius);
+		STLMesh.Bounds.SphereRadius = FMath::Max((BuildVertex.Position - FVector3f(STLMesh.Bounds.Origin)).Size(), STLMesh.Bounds.SphereRadius);
 		if (Index % 3 == 0) // generate indices every 3 vertices
 		{
 			STLMesh.LODIndices.Add(Index);
@@ -465,9 +465,9 @@ bool UUnrealSTLFunctionLibrary::SaveStaticMeshToSTLData(UStaticMesh* StaticMesh,
 			Swap(VertexIndex2, VertexIndex3);
 		}
 		const FVector3f NegateX = FVector3f(-1, 1, 1);
-		FVector3f Vertex1 = Config.Transform.TransformPosition(Vertices[VertexIndex1]) * NegateX;
-		FVector3f Vertex2 = Config.Transform.TransformPosition(Vertices[VertexIndex2]) * NegateX;
-		FVector3f Vertex3 = Config.Transform.TransformPosition(Vertices[VertexIndex3]) * NegateX;
+		FVector3f Vertex1 = FVector3f(Config.Transform.TransformPosition(FVector(Vertices[VertexIndex1]))) * NegateX;
+		FVector3f Vertex2 = FVector3f(Config.Transform.TransformPosition(FVector(Vertices[VertexIndex2]))) * NegateX;
+		FVector3f Vertex3 = FVector3f(Config.Transform.TransformPosition(FVector(Vertices[VertexIndex3]))) * NegateX;
 		FVector3f Normal = (Vertex3 - Vertex1).Cross(Vertex2 - Vertex1).GetSafeNormal();
 		uint16 Attributes = 0;
 
