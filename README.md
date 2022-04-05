@@ -1,6 +1,9 @@
 # UnrealSTL
 Unreal Engine plugin for importing and exporting STL files in both Editor and Runtime
 
+![StanfordBunny](Screenshot.png?raw=true "StanfordBunny")
+
+
 ## Editor
 
 Once the plugin is installed you can just import .STL files as StaticMeshes. By right clicking any StaticMesh asset, you can export it as STL.
