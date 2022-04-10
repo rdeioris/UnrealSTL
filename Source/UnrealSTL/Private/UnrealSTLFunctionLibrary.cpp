@@ -10,6 +10,7 @@ namespace UnrealSTL
 	constexpr int32 BinaryHeaderSizeAndSize = BinaryHeaderSize + 4;
 	constexpr int32 BinaryTriangleSize = 50;
 
+#if ENGINE_MAJOR_VERSION > 4
 	template<typename ReturnType, typename RHIResource>
 	static void GPUToCPU(TArray<ReturnType>& Data, RHIResource Resource, const int32 NumElements)
 	{
@@ -36,6 +37,7 @@ namespace UnrealSTL
 
 		FGenericPlatformProcess::ReturnSynchEventToPool(GPUEvent);
 	}
+#endif
 }
 
 FUnrealSTLMesh::FUnrealSTLMesh()
@@ -427,24 +429,39 @@ bool UUnrealSTLFunctionLibrary::SaveStaticMeshToSTLData(UStaticMesh* StaticMesh,
 	}
 	else
 	{
-#if ENGINE_MAJOR_VERSION < 5
-		// currently indexbuffer copy is not supported
-		return false;
-#else
 		if (LODResources.IndexBuffer.Is32Bit())
 		{
+#if ENGINE_MAJOR_VERSION < 5
+			void* LockedIndexBuffer = RHILockIndexBuffer(LODResources.IndexBuffer.IndexBufferRHI, 0, LODResources.IndexBuffer.GetNumIndices() * sizeof(uint32), EResourceLockMode::RLM_ReadOnly);
+			if (!LockedIndexBuffer)
+			{
+				return false;
+			}
+			Indices.Append(reinterpret_cast<uint32*>(LockedIndexBuffer), LODResources.IndexBuffer.GetNumIndices());
+			RHIUnlockIndexBuffer(LODResources.IndexBuffer.IndexBufferRHI);
+#else
 			UnrealSTL::GPUToCPU(Indices, LODResources.IndexBuffer.IndexBufferRHI, LODResources.IndexBuffer.GetNumIndices());
+#endif
 		}
 		else
 		{
 			TArray<uint16> TmpIndices;
+#if ENGINE_MAJOR_VERSION < 5
+			void* LockedIndexBuffer = RHILockIndexBuffer(LODResources.IndexBuffer.IndexBufferRHI, 0, LODResources.IndexBuffer.GetNumIndices() * sizeof(uint16), EResourceLockMode::RLM_ReadOnly);
+			if (!LockedIndexBuffer)
+			{
+				return false;
+			}
+			TmpIndices.Append(reinterpret_cast<uint16*>(LockedIndexBuffer), LODResources.IndexBuffer.GetNumIndices());
+			RHIUnlockIndexBuffer(LODResources.IndexBuffer.IndexBufferRHI);
+#else
 			UnrealSTL::GPUToCPU(TmpIndices, LODResources.IndexBuffer.IndexBufferRHI, LODResources.IndexBuffer.GetNumIndices());
+#endif
 			for (const uint16 Index : TmpIndices)
 			{
 				Indices.Add(Index);
 			}
 		}
-#endif
 	}
 
 #if ENGINE_MAJOR_VERSION < 5
@@ -460,7 +477,17 @@ bool UUnrealSTLFunctionLibrary::SaveStaticMeshToSTLData(UStaticMesh* StaticMesh,
 	}
 	else
 	{
+#if ENGINE_MAJOR_VERSION < 5
+		void* LockedVertexBuffer = RHILockVertexBuffer(LODResources.VertexBuffers.PositionVertexBuffer.VertexBufferRHI, 0, LODResources.VertexBuffers.PositionVertexBuffer.GetNumVertices() * sizeof(FVector), EResourceLockMode::RLM_ReadOnly);
+		if (!LockedVertexBuffer)
+		{
+			return false;
+		}
+		Vertices.Append(reinterpret_cast<FVector*>(LockedVertexBuffer), LODResources.VertexBuffers.PositionVertexBuffer.GetNumVertices());
+		RHIUnlockVertexBuffer(LODResources.VertexBuffers.PositionVertexBuffer.VertexBufferRHI);
+#else
 		UnrealSTL::GPUToCPU(Vertices, LODResources.VertexBuffers.PositionVertexBuffer.VertexBufferRHI, LODResources.VertexBuffers.PositionVertexBuffer.GetNumVertices());
+#endif
 	}
 
 	TArray<uint8> Header;
