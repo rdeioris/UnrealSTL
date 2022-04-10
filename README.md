@@ -3,6 +3,7 @@ Unreal Engine plugin for importing and exporting STL files in both Editor and Ru
 
 ![StanfordBunny](Screenshot.png?raw=true "StanfordBunny")
 
+Consider sponsoring the project becoming a patron: https://www.patreon.com/rdeioris
 
 ## Editor
 
